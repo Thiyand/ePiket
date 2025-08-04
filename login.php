@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->fetch()) {
         if (password_verify($password, $hashed_password)) {
             $_SESSION['user'] = $username;
-            header('Location: dashboard.php');
+            header('Location: index.php');
             exit;
         } else {
             $error = 'Password salah.';

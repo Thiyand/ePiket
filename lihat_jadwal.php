@@ -1,60 +1,74 @@
 <?php
-session_start();
-if (!isset($_SESSION['user'])) {
-    header('Location: index.php');
-    exit;
-}
+require_once 'koneksi.php';
+
+$kelasQuery = $conn->query("SELECT DISTINCT kelas FROM siswa ORDER BY kelas");
+$hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Lihat Jadwal Piket</title>
+  <meta charset="UTF-8">
+  <title>Jadwal Piket Semua Kelas</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-blue-50 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md">
-    <h1 class="text-2xl font-bold text-blue-700 mb-4">Jadwal Piket Kelas</h1>
+<body class="bg-gray-50 p-6">
+  <h1 class="text-3xl font-bold text-center text-blue-700 mb-8">Jadwal Piket Tiap Kelas</h1>
 
-    <!-- Tabel Jadwal -->
-    <table class="min-w-full text-sm border border-gray-300">
-      <thead class="bg-blue-100 text-blue-700">
-        <tr>
-          <th class="border px-4 py-2">Hari</th>
-          <th class="border px-4 py-2">Nama Siswa</th>
-        </tr>
-      </thead>
-      <tbody class="text-gray-700">
-        <tr>
-          <td class="border px-4 py-2">Senin</td>
-          <td class="border px-4 py-2">Gilang, Ilham, Ade</td>
-        </tr>
-        <tr>
-          <td class="border px-4 py-2">Selasa</td>
-          <td class="border px-4 py-2">Andi, Suarez, Yoga</td>
-        </tr>
-        <tr>
-          <td class="border px-4 py-2">Rabu</td>
-          <td class="border px-4 py-2">Soraya, Mail, Siti</td>
-        </tr>
-        <tr>
-          <td class="border px-4 py-2">Kamis</td>
-          <td class="border px-4 py-2">Sahrul, Ahmad, Asep</td>
-        </tr>
-        <tr>
-          <td class="border px-4 py-2">Jum'at</td>
-          <td class="border px-4 py-2">Eel, Riska, Edo</td>
-        </tr>
-        <!-- Tambahkan baris sesuai jadwal -->
-      </tbody>
-    </table>
-    <br>
-    <a href="dashboard.php" class="mt-6 inline-block text-blue-600 hover:underline">
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-red-700">
-              Kembali ke Dashboard  
-      </button>
-    </a>
+  <div class="max-w-6xl mx-auto space-y-12">
+    <?php while ($kls = $kelasQuery->fetch_assoc()): 
+      $kelas = $kls['kelas'];
+      $stmt = $conn->prepare("SELECT nama FROM siswa WHERE kelas = ? ORDER BY nama ASC");
+      $stmt->bind_param("s", $kelas);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      $siswa = [];
+      while ($row = $result->fetch_assoc()) {
+        $siswa[] = $row['nama'];
+      }
+
+      // Bagi siswa ke dalam 5 hari
+      $piket = array_fill_keys($hari, []);
+      $index = 0;
+      foreach ($siswa as $nama) {
+        $piket[$hari[$index % 5]][] = $nama;
+        $index++;
+      }
+    ?>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+      <h2 class="text-xl font-bold text-purple-700 mb-4">Kelas <?= htmlspecialchars($kelas) ?></h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-300 text-sm">
+          <thead class="bg-purple-100 text-purple-800">
+            <tr>
+              <?php foreach ($hari as $h): ?>
+                <th class="border px-4 py-2"><?= $h ?></th>
+              <?php endforeach; ?>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700">
+            <?php
+              $max = max(array_map('count', $piket));
+              for ($i = 0; $i < $max; $i++) {
+                echo "<tr>";
+                foreach ($hari as $h) {
+                  echo "<td class='border px-4 py-2'>" . ($piket[$h][$i] ?? '') . "</td>";
+                }
+                echo "</tr>";
+              }
+            ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <?php endwhile; ?>
+  </div>
+
+  <div class="text-center mt-10">
+    <a href="index.php" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800"> Kembali ke Dashboard</a>
   </div>
 </body>
 </html>
