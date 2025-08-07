@@ -135,7 +135,7 @@ while ($row = $result->fetch_assoc()) {
 </a>
 
   <?php else: ?>
-    <a href="index.php" class="inline-block text-blue-600 hover:underline">
+    <a href="index.php" class="inline-block bg-red-300 text-black-600 px-4 py-2 rounded hover:bg-gray-400">
        Kembali ke Dashboard
     </a>
   <?php endif; ?>
